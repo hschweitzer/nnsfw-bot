@@ -72,18 +72,18 @@ bot.on('message', (msg) => {
                     });
                 }
             });
-        } else if (msg.content.charAt(0) === prefix) {
+        } else if (msg.content.substring(0, prefix.length) === prefix) {
             const content = msg.content.toString();
-            const isAdmin = msg.guild.member(msg.author).hasPermission('ADMINISTRATOR');
+            const isAdmin = msg.guild.member(msg.author).hasPermission('MANAGE_GUILD');
             switch (content.split(' ')[0].toLowerCase()) {
-                case prefix + 'nhelp':
+                case prefix + 'help':
                     msg.author.createDM().then((dm) => {
                         dm.send({embed: serversettings.helpmessage});
                     });
                     msg.reply('une aide vous a été envoyée par message privé.');
                     break;
-                case prefix + 'nsc':
-                case prefix + 'nsetchannel':
+                case prefix + 'sc':
+                case prefix + 'setchannel':
                     if (isAdmin) {
                         const firstchannelid = content.split(' ')[1];
                         const secondchannelid = content.split(' ')[2];
