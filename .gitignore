@@ -76,3 +76,5 @@ typings/
 .fusebox/
 
 NNSFW-7037cf0b093a.json
+
+server-setting.json
