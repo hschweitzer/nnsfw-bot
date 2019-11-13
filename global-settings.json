@@ -1,0 +1,35 @@
+{
+  "languages": [
+    "FR"
+  ],
+  "helpmessage": {
+    "title": "Aide pour NNSFW",
+    "author": {
+      "name": "GitHub du projet",
+      "url": "https://github.com/hschweitzer/nnsfw-bot"
+    },
+    "fields": [
+      {
+        "name": "A propos",
+        "value": "Je ne me tiens pas responsable pour toute perte d'image suite à une suppression par NNSFW."
+      },
+      {
+        "name": "!nsc / !nsetchannel **(admin)**",
+        "value": "Permet de définir une pair de channels SFW/NSFW.\nLes images définies comme NSFW dans le premier channel seront redirigées vers le deuxième channel.\nUtilisation: \"**!nsc [id channel sfw] [id channel nsfw]**\""
+      },
+      {
+        "name": "!nuc / !nunsetchannel **(admin)**",
+        "value": "Permet de retirer une pair de channels SFW/NSFW.\nUtilisation: !nuc [id channel sfw]"
+      }
+    ]
+  },
+  "default": {
+    "prefix": "!n",
+    "lang": "FR",
+    "actions": {
+      "autoremovelvl": "5",
+      "addreactionlvl": "1"
+    },
+    "channels": {}
+  }
+}
