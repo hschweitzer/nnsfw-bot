@@ -6,6 +6,7 @@ const client = new vision.ImageAnnotatorClient();
 const bot = new Discord.Client();
 const filename = './server-settings.json';
 const serversettings = require(filename);
+const globalsettings = require('./global-settings.json');
 const fs = require('fs');
 const token = process.env.BOT_TOKEN;
 const ratings = [
@@ -28,19 +29,24 @@ bot.on('message', (msg) => {
             } else {
                 url = msg.embeds[0].url;
             }
-            const filter = (reaction, user) => reaction.emoji.name === '🔞';
-            msg.react('🔞');
-            msg.awaitReactions(filter, { max: 3, time: 1800000 }).then(collected => {
-                const member = msg.guild.member(collected.array()[0].users.last());
-                if (member.hasPermission('MANAGE_MESSAGES') || collected.size >= 3) {
-                    let destinationid;
-                    if (destinationid = getnsfwChannel(serverid, msg.channel.id)) {
-                        destinationchannel = msg.guild.channels.get(destinationid);
-                        destinationchannel.send(url);
-                        msg.reply('ce message a été jugé inapproprié et a été déplacé dans #' + destinationchannel.name);
-                        msg.delete();
+
+            const filter = (reaction, user) => reaction.emoji.name === '🔞' && !user.bot;
+            const collector = msg.createReactionCollector(filter, { time: 1800000 });
+            msg.react('🔞').then((res) => {
+                collector.on('collect', (reaction) => {
+                    const member = msg.guild.member(reaction.users.last());
+                    if (member.hasPermission('MANAGE_MESSAGES') || reaction.users.size > 3) {
+                        let destinationid;
+                        if (destinationid = getNsfwChannel(serverid, msg.channel.id)) {
+                            destinationchannel = msg.guild.channels.get(destinationid);
+                            destinationchannel.send(url).then(() => {
+                                msg.reply('ce message a été jugé inapproprié et a été déplacé dans #' + destinationchannel.name).then(() => {
+                                    msg.delete();
+                                });
+                            });
+                        }
                     }
-                }
+                });
             });
 
             request.get(url, (error, response, body) => {
@@ -57,14 +63,17 @@ bot.on('message', (msg) => {
                         const rating = response[0].safeSearchAnnotation;
                         if (ratings.indexOf(rating.adult) >= (serversettings.servers[serverid].actions.autoremovelvl - 1)) {
                             let destinationid;
-                            if (destinationid = getnsfwChannel(serverid, msg.channel.id)) {
+                            if (destinationid = getNsfwChannel(serverid, msg.channel.id)) {
                                 destinationchannel = msg.guild.channels.get(destinationid);
                                 destinationchannel.send(url);
-                                msg.reply('cette image a été automatiquement détectée comme étant inapproprié et a été déplacé dans #' + destinationchannel.name);
+                                msg.reply('cette image a été automatiquement détectée comme étant inapproprié et a été déplacé dans #' + destinationchannel.name).then(() => {
+                                    msg.delete();
+                                });
                             } else {
-                                msg.channel.send('cette image a été automatiquement détectée comme étant inappropriée et a été supprimée.');
+                                msg.reply('cette image a été automatiquement détectée comme étant inappropriée et a été supprimée.').then(() => {
+                                    msg.delete();
+                                });
                             }
-                            msg.delete();
                         }
                     })
                     .catch(err => {
@@ -78,7 +87,7 @@ bot.on('message', (msg) => {
             switch (content.split(' ')[0].toLowerCase()) {
                 case prefix + 'help':
                     msg.author.createDM().then((dm) => {
-                        dm.send({embed: serversettings.helpmessage});
+                        dm.send({embed: globalsettings.helpmessage});
                     });
                     msg.reply('une aide vous a été envoyée par message privé.');
                     break;
@@ -90,11 +99,11 @@ bot.on('message', (msg) => {
                         let firstchannel;
                         let secondchannel;
                         let errors = 0;
-                        if ((firstchannel = msg.guild.channels.find('id', firstchannelid)) === null) {
+                        if ((firstchannel = msg.guild.channels.get(firstchannelid)) === null) {
                             msg.channel.send('Le premier channel n\'existe pas !');
                             errors++;
                         }
-                        if ((secondchannel = msg.guild.channels.find('id', secondchannelid)) === null) {
+                        if ((secondchannel = msg.guild.channels.get(secondchannelid)) === null) {
                             msg.channel.send('Le deuxième channel n\'existe pas !');
                             errors++;
                         } else if (!secondchannel.nsfw) {
@@ -110,6 +119,22 @@ bot.on('message', (msg) => {
                         msg.channel.send('Cette commande est réservée aux administrateurs.');
                     }
                     break;
+                case prefix + 'uc':
+                case prefix + 'unsetchannel':
+                    if (isAdmin) {
+                        const firstchannelid = content.split(' ')[1];
+                        if (!!serversettings.servers[serverid].channels[firstchannelid]) {
+                            delete serversettings.servers[serverid].channels[firstchannelid];
+                            writeSettings(serversettings);
+                            firstchannel = msg.guild.channels.get(firstchannelid);
+                            msg.channel.send('Le channel #' + firstchannel.name + ' n\'est plus associé à un channel NSFW.');
+                        } else {
+                            msg.channel.send('Aucune pair trouvée pour cet identifiant.');
+                        }
+                    } else {
+
+                    }
+                    break;
                 default:
                     msg.channel.send('Commande non reconnue, tapez ' + prefix + 'nhelp afin de consulter les commandes disponibles');
                     break;
@@ -120,7 +145,7 @@ bot.on('message', (msg) => {
 
 function checkDefaultSettings (serverid) {
     if (serversettings.servers[serverid] === undefined) {
-        serversettings.servers[serverid] = serversettings.servers.default;
+        serversettings.servers[serverid] = globalsettings.default;
         writeSettings(serversettings);
     }
 }
@@ -133,7 +158,7 @@ function writeSettings (file) {
     });
 }
 
-function getnsfwChannel (serverid, channelid) {
+function getNsfwChannel (serverid, channelid) {
     if (serversettings.servers[serverid] !== undefined) {
         if (serversettings.servers[serverid].channels[channelid] !== undefined) {
             return serversettings.servers[serverid].channels[channelid];
