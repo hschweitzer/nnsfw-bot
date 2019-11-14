@@ -35,12 +35,19 @@ bot.on('message', (msg) => {
             msg.react('🔞').then((res) => {
                 collector.on('collect', (reaction) => {
                     const member = msg.guild.member(reaction.users.last());
+                    console.log(reaction.users.size);
                     if (member.hasPermission('MANAGE_MESSAGES') || reaction.users.size > 3) {
                         let destinationid;
                         if (destinationid = getNsfwChannel(serverid, msg.channel.id)) {
                             destinationchannel = msg.guild.channels.get(destinationid);
                             destinationchannel.send(url).then(() => {
                                 msg.reply('ce message a été jugé inapproprié et a été déplacé dans #' + destinationchannel.name).then(() => {
+                                    msg.delete();
+                                });
+                            });
+                        } else {
+                            msg.author.createDM().then((dm) => {
+                                dm.send("L'image que tu as posté dans le salon #" + msg.channel.name + " sur le serveur \"" + msg.guild.name + "\" a été jugée inapropriée.\nVoici l'image en question : || " + url + " ||").then(() => {
                                     msg.delete();
                                 });
                             });
@@ -70,8 +77,10 @@ bot.on('message', (msg) => {
                                     msg.delete();
                                 });
                             } else {
-                                msg.reply('cette image a été automatiquement détectée comme étant inappropriée et a été supprimée.').then(() => {
-                                    msg.delete();
+                                msg.author.createDM().then((dm) => {
+                                    dm.send("L'image que tu as posté dans le salon #" + msg.channel.name + " sur le serveur \"" + msg.guild.name + "\" a été détectée automatiquement comme inapropriée.\nVoici l'image en question : || " + url + " ||").then(() => {
+                                        msg.delete();
+                                    });
                                 });
                             }
                         }
