@@ -4,7 +4,7 @@ const vision = require('@google-cloud/vision');
 const request = require('request').defaults({ encoding: null });
 const client = new vision.ImageAnnotatorClient();
 const bot = new Discord.Client();
-const filename = './server-settings.json';
+const filename = './servers-settings.json';
 const serversettings = require(filename);
 const globalsettings = require('./global-settings.json');
 const fs = require('fs');
@@ -35,7 +35,6 @@ bot.on('message', (msg) => {
             msg.react('🔞').then((res) => {
                 collector.on('collect', (reaction) => {
                     const member = msg.guild.member(reaction.users.last());
-                    console.log(reaction.users.size);
                     if (member.hasPermission('MANAGE_MESSAGES') || reaction.users.size > 3) {
                         let destinationid;
                         if (destinationid = getNsfwChannel(serverid, msg.channel.id)) {
