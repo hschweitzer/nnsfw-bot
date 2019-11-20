@@ -56,27 +56,25 @@ bot.on('message', (msg) => {
 
             const filter = (reaction, user) => reaction.emoji.name === '🔞' && !user.bot;
             const collector = msg.createReactionCollector(filter, { time: 1800000 });
-            msg.react('🔞').then((res) => {
-                collector.on('collect', (reaction) => {
-                    const member = msg.guild.member(reaction.users.last());
-                    if (member.hasPermission('MANAGE_MESSAGES') || reaction.users.size > 3) {
-                        let destinationid;
-                        if (destinationid = getNsfwChannel(serverid, msg.channel.id)) {
-                            destinationchannel = msg.guild.channels.get(destinationid);
-                            destinationchannel.send(url).then(() => {
-                                msg.reply('ce message a été jugé inapproprié et a été déplacé dans #' + destinationchannel.name).then(() => {
-                                    msg.delete();
-                                });
+            collector.on('collect', (reaction) => {
+                const member = msg.guild.member(reaction.users.last());
+                if (member.hasPermission('MANAGE_MESSAGES') || reaction.users.size > 3) {
+                    let destinationid;
+                    if (destinationid = getNsfwChannel(serverid, msg.channel.id)) {
+                        destinationchannel = msg.guild.channels.get(destinationid);
+                        destinationchannel.send(url).then(() => {
+                            msg.reply('ce message a été jugé inapproprié et a été déplacé dans #' + destinationchannel.name).then(() => {
+                                msg.delete();
                             });
-                        } else {
-                            msg.author.createDM().then((dm) => {
-                                dm.send("L'image que tu as posté dans le salon #" + msg.channel.name + " sur le serveur \"" + msg.guild.name + "\" a été jugée inapropriée.\nVoici l'image en question : || " + url + " ||").then(() => {
-                                    msg.delete();
-                                });
+                        });
+                    } else {
+                        msg.author.createDM().then((dm) => {
+                            dm.send("L'image que tu as posté dans le salon #" + msg.channel.name + " sur le serveur \"" + msg.guild.name + "\" a été jugée inapropriée.\nVoici l'image en question : || " + url + " ||").then(() => {
+                                msg.delete();
                             });
-                        }
+                        });
                     }
-                });
+                }
             });
 
             request.get(url, (error, response, body) => {
