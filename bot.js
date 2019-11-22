@@ -1,6 +1,7 @@
 require('dotenv').config()
 const fs = require('fs');
 const Discord = require('discord.js');
+const isImageUrl = require('is-image-url');
 const vision = require('@google-cloud/vision');
 const request = require('request').defaults({ encoding: null });
 const { createLogger, format, transports } = require('winston');
@@ -77,40 +78,42 @@ bot.on('message', (msg) => {
                 }
             });
 
-            request.get(url, (error, response, body) => {
-                if (!error && response.statusCode == 200) {
-                    const request = {
-                        image: {
-                            content: Buffer.from(body)
-                        }
-                    };
-
-                    client
-                    .safeSearchDetection(request)
-                    .then(response => {
-                        const rating = response[0].safeSearchAnnotation;
-                        if (ratings.indexOf(rating.adult) >= (serversettings.servers[serverid].actions.autoremovelvl - 1)) {
-                            let destinationid;
-                            if (destinationid = getNsfwChannel(serverid, msg.channel.id)) {
-                                destinationchannel = msg.guild.channels.get(destinationid);
-                                destinationchannel.send(url);
-                                msg.reply('cette image a été automatiquement détectée comme étant inapproprié et a été déplacé dans #' + destinationchannel.name).then(() => {
-                                    msg.delete();
-                                });
-                            } else {
-                                msg.author.createDM().then((dm) => {
-                                    dm.send("L'image que tu as posté dans le salon #" + msg.channel.name + " sur le serveur \"" + msg.guild.name + "\" a été détectée automatiquement comme inapropriée.\nVoici l'image en question : || " + url + " ||").then(() => {
+            if (isImageUrl(url)) {
+                request.get(url, (error, response, body) => {
+                    if (!error && response.statusCode == 200) {
+                        const request = {
+                            image: {
+                                content: Buffer.from(body)
+                            }
+                        };
+    
+                        client
+                        .safeSearchDetection(request)
+                        .then(response => {
+                            const rating = response[0].safeSearchAnnotation;
+                            if (ratings.indexOf(rating.adult) >= (serversettings.servers[serverid].actions.autoremovelvl - 1)) {
+                                let destinationid;
+                                if (destinationid = getNsfwChannel(serverid, msg.channel.id)) {
+                                    destinationchannel = msg.guild.channels.get(destinationid);
+                                    destinationchannel.send(url);
+                                    msg.reply('cette image a été automatiquement détectée comme étant inapproprié et a été déplacé dans #' + destinationchannel.name).then(() => {
                                         msg.delete();
                                     });
-                                });
+                                } else {
+                                    msg.author.createDM().then((dm) => {
+                                        dm.send("L'image que tu as posté dans le salon #" + msg.channel.name + " sur le serveur \"" + msg.guild.name + "\" a été détectée automatiquement comme inapropriée.\nVoici l'image en question : || " + url + " ||").then(() => {
+                                            msg.delete();
+                                        });
+                                    });
+                                }
                             }
-                        }
-                    })
-                    .catch(err => {
-                        logger.error('Google API error: %s', err, new Date());
-                    });
-                }
-            });
+                        })
+                        .catch(err => {
+                            logger.error('Google API error: %s -- Message url: %s', err, msg.url, new Date());
+                        });
+                    }
+                });
+            }
         } else if (msg.content.substring(0, prefix.length) === prefix) {
             const content = msg.content.toString();
             const isAdmin = msg.guild.member(msg.author).hasPermission('MANAGE_GUILD');
