@@ -10,16 +10,27 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+<<<<<<< HEAD
     "@google-cloud/vision": "^1.8.0",
     "discord.js": "^11.5.1",
+=======
+    "@google-cloud/vision": "^1.11.0",
+    "discord.js": "^11.6.4",
+>>>>>>> cbb6a79c01cddcad7f8312881ff060932acd6462
     "dotenv": "^8.2.0",
     "is-image-url": "^1.1.8",
-    "request": "^2.88.0",
+    "request": "^2.88.2",
     "winston": "^3.2.1"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@google-cloud/storage": "^4.1.3",
     "pm2": "^4.2.1",
     "uuid": "^3.2.1"
+=======
+    "@google-cloud/storage": "^4.7.0",
+    "pm2": "^4.4.0",
+    "uuid": "^3.4.0"
+>>>>>>> cbb6a79c01cddcad7f8312881ff060932acd6462
   }
 }

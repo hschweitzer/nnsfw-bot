@@ -34,8 +34,8 @@ const logger = createLogger({
     defaultMeta: { service: 'nnsfw-bot' },
     transports: [
       //
-      // - Write to all logs with level `info` and below to `quick-start-combined.log`.
-      // - Write all logs error (and below) to `quick-start-error.log`.
+      // - Write to all logs with level `info` and below to `combined.log`.
+      // - Write all logs error (and below) to `error.log`.
       //
       new transports.File({ filename: './logs/error.log', level: 'error' }),
       new transports.File({ filename: './logs/combined.log' })
@@ -101,7 +101,8 @@ bot.on('message', (msg) => {
                                     });
                                 } else {
                                     msg.author.createDM().then((dm) => {
-                                        dm.send("L'image que tu as posté dans le salon #" + msg.channel.name + " sur le serveur \"" + msg.guild.name + "\" a été détectée automatiquement comme inapropriée.\nVoici l'image en question : || " + url + " ||").then(() => {
+                                        dm.send(`L'image que tu as posté dans le salon #${msg.channel.name} sur le serveur ${msg.guild.name} a été détectée automatiquement comme inapropriée.
+Voici l'image en question : || ${url}`).then(() => {
                                             msg.delete();
                                         });
                                     });
@@ -186,7 +187,7 @@ function checkDefaultSettings (serverid) {
 function writeSettings (file) {
     fs.writeFile(filename, JSON.stringify(file, null, 2), (err) => {
         if (err) {
-            console.log(err);
+            logger.error(err, new Date());
         }
     });
 }
